@@ -1,17 +1,19 @@
-#main.py
-from colorama import Fore, init
-from getpass import getpass
-from naves import NaveExtra
-from tabuleiro import Tabuleiro
-import os
+from colorama import Fore, init  # Importa o módulo para usar cores no terminal
+from getpass import getpass  # Importa o getpass para pausar o jogo (oculta input, mas aqui usado só pra pausa)
+from naves import NaveExtra  # Importa a classe NaveExtra, provavelmente para gerir as naves
+from tabuleiro import Tabuleiro  # Importa a classe Tabuleiro, para criar e manipular os tabuleiros
+import os  # Importa o módulo OS para limpar a tela
 
+# Função que limpa a tela, seja no Windows ("cls") ou no Linux/MacOS ("clear")
 def limpar_tela():
     os.system("cls" if os.name == "nt" else "clear")
 
-# Inicializa o suporte a cores no terminal
+# Inicializa o suporte às cores no terminal
 init(autoreset=True)
 
+# Função para mostrar a capa do jogo
 def capa():
+    limpar_tela()  # Dá aquela limpada básica no terminal
     print(f"""{Fore.YELLOW}
  ▐ ▄  ▄▄▄·  ▌ ▐·▄▄▄ ..▄▄ · 
 •█▌▐█▐█ ▀█ ▪█·█▌▀▄.▀·▐█ ▀. 
@@ -24,120 +26,128 @@ def capa():
        {Fore.LIGHTRED_EX}__|__{Fore.RESET}                 {Fore.LIGHTBLUE_EX}__|__{Fore.RESET}
 {Fore.LIGHTRED_EX}--------(_)--------{Fore.RESET}   {Fore.LIGHTBLUE_EX}--------(_)--------{Fore.RESET}
   {Fore.YELLOW}O  O       O  O{Fore.RESET}       {Fore.YELLOW}O  O       O  O{Fore.RESET}
-""")
-    print("Bem-vindo ao jogo!")
-    input("Pressione Enter para continuar...")  # Um único Enter necessário
+""")  # Título e gráfico bonitinho com cores
+    print("Bem-vindo ao jogo!")  # Mensagem de boas-vindas
+    input("Pressione Enter para começar...")  # Aguarda o jogador pressionar Enter
+    limpar_tela()  # Limpa a tela novamente
 
-# Chama a capa
+# Mostra a capa inicial
 capa()
 
-
+# Função para validar inputs do jogador
 def obter_input_valido(prompt, opcoes_validas):
-    """
-    Valida o input do jogador, restringindo às opções válidas.
-    """
-    while True:
-        valor = input(prompt).strip().upper()
-        if valor in opcoes_validas:
-            return valor
-        print(f"Opção inválida! Escolha entre: {', '.join(opcoes_validas)}")
+    while True:  # Loop infinito até o jogador escolher algo válido
+        valor = input(prompt).strip().upper()  # Pede input, remove espaços e põe em maiúsculas
+        if valor in opcoes_validas:  # Verifica se é válido
+            return valor  # Se for, devolve o valor
+        print(f"Opção inválida! Escolha entre: {', '.join(opcoes_validas)}")  # Se não, manda bronca
 
+# Função para colorir as letras representativas das naves
 def colorir_letra(letra):
-    """
-    Retorna a letra colorida de acordo com a nave.
-    """
-    cores = {"R": Fore.MAGENTA, "V": Fore.RED, "A": Fore.BLUE}
-    return f"{cores.get(letra, Fore.WHITE)}{letra}{Fore.RESET}"
+    cores = {"R": Fore.MAGENTA, "V": Fore.RED, "A": Fore.BLUE}  # Define cores para cada letra
+    return f"{cores.get(letra, Fore.WHITE)}{letra}{Fore.RESET}"  # Aplica a cor correspondente
 
+# Função principal que inicia o jogo
 def iniciar_jogo():
-    """
-    Lógica principal do jogo.
-    """
-    limpar_tela()
-    capa()
-    tabuleiro = Tabuleiro(tipo="normal")
+    limpar_tela()  # Começa limpando a tela
 
-    # Criação das naves
+    # Criação das naves com características específicas
     naves = [
-        NaveExtra("Nave1", "Rosa", 10, "R", 12),
-        NaveExtra("Nave2", "Vermelho", 15, "V", 18),
-        NaveExtra("Nave3", "Azul", 20, "A", 24)
+        NaveExtra("Nave1", "Rosa", 5, "R", 20),  # Nave rosa, com energia extra e menor perda
+        NaveExtra("Nave2", "Vermelho", 7, "V", 25),  # Nave vermelha, intermediária
+        NaveExtra("Nave3", "Azul", 10, "A", 30)  # Nave azul, mais resistente
     ]
 
-    tiros_certeiros, num_tiros = 0, 0
+    tiros_certeiros, num_tiros = 0, 0  # Contadores para o número de tiros certeiros e totais
 
+    # Escolha do modo de jogo
     print("Escolha o modo de jogo:")
-    print("1. Tiros controlados pelo jogador")
-    print("2. Tiros aleatórios")
+    print("1. Tiros controlados pelo jogador")  # Modo manual
+    print("2. Tiros aleatórios")  # Modo automático
     modo = obter_input_valido("Digite o número do modo escolhido (1 ou 2): ", ["1", "2"])
 
-    while num_tiros < 105:
-        limpar_tela()
+    # Escolha do tipo de tabuleiro
+    print("Escolha o tipo de tabuleiro:")
+    print("1. Tabuleiro Normal")
+    print("2. Tabuleiro em Forma de Pirâmide")
 
-        # Posicionar naves ativas
-        naves_posicoes = {}
-        for nave in naves:
-            if nave.energia > 0:
-                while True:
-                    pos = tabuleiro.posicionar_aleatorio()
-                    if pos not in naves_posicoes:
-                        naves_posicoes[pos] = colorir_letra(nave.letra)
+    while True:  # Valida a escolha do tabuleiro
+        escolha_tabuleiro = input("Digite o número do tabuleiro escolhido: ")
+        if escolha_tabuleiro == "1":
+            tipo_tabuleiro = "normal"  # Tabuleiro básico
+            break
+        elif escolha_tabuleiro == "2":
+            tipo_tabuleiro = "piramide"  # Tabuleiro diferente
+            break
+        else:
+            print("Opção inválida. Escolha 1 ou 2.")  # Mensagem de erro
+
+    tabuleiro = Tabuleiro(tipo=tipo_tabuleiro)  # Cria o tabuleiro com o tipo escolhido
+
+    # Loop principal do jogo
+    while num_tiros < 105:  # Jogo termina após 105 tiros
+        limpar_tela()  # Limpa a tela a cada ronda
+
+        naves_posicoes = {}  # Dicionário para guardar as posições das naves
+        for nave in naves:  # Posiciona cada nave no tabuleiro
+            if nave.energia > 0:  # Só posiciona se a nave ainda tiver energia
+                while True:  # Garante que a posição seja única
+                    pos = tabuleiro.posicionar_aleatorio()  # Gera posição aleatória
+                    if pos not in naves_posicoes:  # Verifica se já está ocupada
+                        naves_posicoes[pos] = colorir_letra(nave.letra)  # Adiciona ao tabuleiro
                         break
 
-        # Limpar o tabuleiro de tiros no início de cada rodada
-        tiros_posicoes = {}
+        tiros_posicoes = {}  # Dicionário para guardar os tiros realizados
 
-        # Processar tiros
-        tiros_realizados = 0
-        while tiros_realizados < 3:  # Garantir sempre 3 tiros
-            if modo == "1":
+        tiros_realizados = 0  # Reseta o contador de tiros na ronda
+        while tiros_realizados < 3:  # Limita a 3 tiros por ronda
+            if modo == "1":  # Modo manual
                 linha = int(obter_input_valido("Escolha a linha (1, 2 ou 3): ", ["1", "2", "3"]))
-                coluna = obter_input_valido("Escolha a coluna (A, B ou C): ", ["A", "B", "C"])
-                tiro = (linha, coluna)
-            else:
-                tiro = tabuleiro.posicionar_aleatorio()
+                coluna = obter_input_valido("Escolha a coluna (A, B, C, D, E): ", ["A", "B", "C", "D", "E"])
+                tiro = (linha, coluna)  # Combina linha e coluna
+            else:  # Modo automático
+                tiro = tabuleiro.posicionar_aleatorio()  # Gera tiro aleatório
 
-            if tiro not in tiros_posicoes:
-                tiros_posicoes[tiro] = "X"
-                tiros_realizados += 1
-                num_tiros += 1
+            if tiro not in tiros_posicoes:  # Verifica se a posição já foi usada
+                tiros_posicoes[tiro] = "X"  # Marca o tiro
+                tiros_realizados += 1  # Incrementa o contador de tiros
+                num_tiros += 1  # Incrementa o contador total
 
-            for posicao, letra in list(naves_posicoes.items()):
+            for posicao, letra in list(naves_posicoes.items()):  # Verifica se o tiro acertou
                 if posicao == tiro:
                     for nave in naves:
                         if nave.letra in letra:
-                            nave.perder_energia()
-                            if nave.energia == 0:
+                            nave.perder_energia()  # Reduz energia da nave
+                            if nave.energia == 0:  # Remove a nave se a energia acabar
                                 del naves_posicoes[posicao]
-                            tiros_certeiros += 1
+                            tiros_certeiros += 1  # Incrementa o contador de acertos
 
-        # Atualizar tabuleiros
+        # Mostra o estado atual do jogo
         print(f"Ronda {num_tiros // 3 + 1}")
-        tabuleiro.desenhar(naves_posicoes, tiros_posicoes)
+        tabuleiro.desenhar(naves_posicoes, tiros_posicoes)  # Desenha o tabuleiro
 
-        # Exibir estado das naves
         print("\nEstado das Naves:")
-        for nave in naves:
+        for nave in naves:  # Mostra os dados de cada nave
             print(nave.mostrar_dados())
 
-        # Estatísticas da rodada
-        print(f"\nTotal de tiros: {num_tiros}")
-        print(f"Tiros certeiros: {tiros_certeiros}")
-        print(f"Eficácia: {tiros_certeiros * 100 / num_tiros:.2f}%")
+        print(f"\nTotal de tiros: {num_tiros}")  # Total de tiros realizados
+        print(f"Tiros certeiros: {tiros_certeiros}")  # Total de acertos
+        print(f"Eficácia: {tiros_certeiros * 100 / num_tiros:.2f}%")  # Percentual de eficácia
 
-        # Energia extra após 45 tiros
-        if num_tiros == 45:
-            print(Fore.CYAN + "Naves ganharam energia extra!" + Fore.RESET)
+        if num_tiros == 45:  # Evento especial após 45 tiros
+            print(Fore.CYAN + "As naves ganharam energia extra!" + Fore.RESET)
             for nave in naves:
-                nave.adicionar_energia_extra()
+                nave.adicionar_energia_extra()  # Adiciona energia extra às naves
 
-        # Verificar fim de jogo
-        if all(nave.energia == 0 for nave in naves):
-            print("Fim de jogo! Todas as naves foram destruídas.")
+        if num_tiros >= 105:  # Fim do jogo após 105 tiros
+            print(Fore.YELLOW + "Jogo terminado: número máximo de tiros atingido." + Fore.RESET)
             break
 
-        getpass("\nPressione ENTER para continuar...")
+        if all(nave.energia == 0 for nave in naves):  # Fim do jogo se todas as naves forem destruídas
+            print(Fore.GREEN + "Parabéns! Você destruiu todas as naves!" + Fore.RESET)
+            break
 
-# Iniciar o jogo
-if __name__ == "__main__":
-    iniciar_jogo()
+        getpass("Pressione Enter para continuar para a próxima ronda...")  # Pausa antes da próxima ronda
+
+# Inicia o jogo
+iniciar_jogo()
